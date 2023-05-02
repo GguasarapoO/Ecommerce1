@@ -11,7 +11,10 @@ export const StateContext = ({children}) => {
     const [totalQuantities, setTotalQuantities] = useState(0)
     const [qty, setQty] = useState(1)
 
-    /*Add or update products state in Cart*/
+    let foundProduct
+    let index
+
+    /*Add products state in Cart*/
     const onAdd = (product, quantity) => {
         const checkProductInCart = cartItems.find((item) => item._id === product._id)
         
@@ -34,6 +37,36 @@ export const StateContext = ({children}) => {
         }
             toast.success(`${qty} ${product.name} agregado al carrito`)
     }
+
+    const onRemove = (product) => {
+        foundProduct = cartItems.find((item) => item._id === product._id)
+        const newCartItems = cartItems.filter((item) => item._id !== product._id)
+
+        setTotalPrice(prevTotalPrice => prevTotalPrice - foundProduct.price * foundProduct.quantity)
+        setTotalQuantities(prevTotalQuantities => prevTotalQuantities - foundProduct.quantity)
+        setCartItems(newCartItems)
+    }
+
+
+    /*Update quantities of one or more products in Cart*/
+    const toggleCartItemQuantity = (id, value) => {
+        foundProduct = cartItems.find((item) => item._id === id)
+        index = cartItems.findIndex((product) => product._id === id)
+        const newCartItems = cartItems.filter((item) => item._id !== id)
+
+        if(value ==='inc') {
+           setCartItems([...newCartItems, {...foundProduct, quantity: foundProduct.quantity + 1}])
+            setTotalPrice(prevTotalPrice => prevTotalPrice + foundProduct.price)
+            setTotalQuantities(prevTotalQuantities => prevTotalQuantities + 1)
+        } else if(value === 'dec') {
+            if (foundProduct.quantity > 1) {
+                setCartItems([...newCartItems, {...foundProduct, quantity: foundProduct.quantity - 1}])
+                setTotalPrice(prevTotalPrice => prevTotalPrice - foundProduct.price)
+                setTotalQuantities(prevTotalQuantities => prevTotalQuantities - 1)
+            }
+        }
+    }
+
     /*Increment/Decrement quantities state of a product*/    
     const incQty = () => {
         setQty((preQty) => preQty + 1)
@@ -56,7 +89,9 @@ export const StateContext = ({children}) => {
             qty,
             incQty,
             decQty,
-            onAdd
+            onAdd,
+            toggleCartItemQuantity,
+            onRemove
         }}
         >
             {children}
